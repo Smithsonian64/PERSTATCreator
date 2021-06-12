@@ -16,6 +16,7 @@ import java.io.FileInputStream;
 import java.io.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Actions {
 
@@ -25,7 +26,8 @@ public class Actions {
         /**
          * Get file from working directory and store it in a reference
          */
-        String filename = "JTF PERSTAT " + LocalDate.now().getDayOfMonth() + " " + LocalDate.now().getMonth() + " " + (LocalDate.now().getYear() - 2000) + ".xlsx";
+
+        String filename = "./src/PERSTATs/JTF PERSTAT " + LocalDate.now().getDayOfMonth() + " " + LocalDate.now().getMonth() + " " + (LocalDate.now().getYear() - 2000) + ".xlsx";
         File file = new File(filename);
         FileInputStream fip = new FileInputStream(file);
         XSSFWorkbook workbook = new XSSFWorkbook(fip);
@@ -52,12 +54,14 @@ public class Actions {
         int testingCount = 0;
         int VAXDispersionSupportCount = 0;
 
-        ArrayList<String> SMsComingOnOrdersToday = new ArrayList<>();
-        ArrayList<String> SMsComingOffOrdersTomorrow = new ArrayList<>();
-        ArrayList<String> SMsComingOffOrders2Weeks = new ArrayList<>();
-        ArrayList<String> SMsOnLeave = new ArrayList<>();
-        ArrayList<String> SMsOnQuarantine = new ArrayList<>();
-        ArrayList<String> SMsOnQuarters = new ArrayList<>();
+        ArrayList<ServiceMember> SMsComingOnOrdersToday = new ArrayList<>();
+        ArrayList<ServiceMember> SMsComingOffOrdersTomorrow = new ArrayList<>();
+        ArrayList<ServiceMember> SMsComingOffOrders2Weeks = new ArrayList<>();
+        ArrayList<ServiceMember> SMsOnLeave = new ArrayList<>();
+        ArrayList<ServiceMember> SMsOnQuarantine = new ArrayList<>();
+        ArrayList<ServiceMember> SMsOnQuarters = new ArrayList<>();
+
+        ArrayList<ServiceMember> SMs = new ArrayList<>();
 
 
         /**
@@ -77,14 +81,8 @@ public class Actions {
         int startDateColumnIndex = 10;
         int endDateColumnIndex = 11;
         int taskForceColumnIndex = 13;
-
-        Cell currentNameCell;
-        Cell currentStatusCell;
-        Cell currentOrdersCell;
-        Cell currentRankCell;
-        Cell currentEndDateCell;
-        Cell currentStartDateCell;
-        Cell currentTaskForceCell;
+        int MOSColumnIndex = 6;
+        
 
 
         /**
@@ -95,40 +93,40 @@ public class Actions {
             /**
              * Skip header rows in workbook
              */
-            if(row.getRowNum() < 3) continue;
+            if (row.getRowNum() < 3) continue;
+            if (formatter.formatCellValue((CellUtil.getCell(row, startDateColumnIndex))).trim().toUpperCase().indexOf('-') == -1) continue;
+            if (formatter.formatCellValue((CellUtil.getCell(row, endDateColumnIndex))).trim().toUpperCase().indexOf('-') == -1) continue;
 
             /**
              * Create Cell references and raw string formats of cell contents for each row
              */
-            currentNameCell = CellUtil.getCell(row, nameColumnIndex);
-            currentStatusCell = CellUtil.getCell(row, statusColumnIndex);
-            currentOrdersCell = CellUtil.getCell(row, ordersColumnIndex);
-            currentRankCell = CellUtil.getCell(row, rankColumnIndex);
-            currentStartDateCell = CellUtil.getCell(row, startDateColumnIndex);
-            currentEndDateCell = CellUtil.getCell(row, endDateColumnIndex);
-            currentTaskForceCell = CellUtil.getCell(row, taskForceColumnIndex);
 
-            String currentName = formatter.formatCellValue(currentNameCell).trim().toUpperCase();
-            String currentStatus = formatter.formatCellValue(currentStatusCell).trim().toUpperCase();
-            String currentOrders = formatter.formatCellValue(currentOrdersCell).trim().toUpperCase();
-            String currentRank = formatter.formatCellValue(currentRankCell).trim().toUpperCase();
-            String currentTaskForce = formatter.formatCellValue(currentTaskForceCell).trim().toUpperCase();
+            SMs.add(new ServiceMember(
+                    formatter.formatCellValue(CellUtil.getCell(row, nameColumnIndex)).trim().toUpperCase(),
+                    formatter.formatCellValue(CellUtil.getCell(row, rankColumnIndex)).trim().toUpperCase(),
+                    formatter.formatCellValue(CellUtil.getCell(row, MOSColumnIndex)).trim().toUpperCase(),
+                    formatter.formatCellValue(CellUtil.getCell(row, ordersColumnIndex)).trim().toUpperCase(),
+                    LocalDate.parse(formatter.formatCellValue(CellUtil.getCell(row, startDateColumnIndex)).trim().toUpperCase()),
+                    LocalDate.parse(formatter.formatCellValue(CellUtil.getCell(row, endDateColumnIndex)).trim().toUpperCase()),
+                    formatter.formatCellValue(CellUtil.getCell(row, taskForceColumnIndex)).trim().toUpperCase(),
+                    formatter.formatCellValue(CellUtil.getCell(row, statusColumnIndex)).trim().toUpperCase()
+            ));
 
-            String currentStartDateText = formatter.formatCellValue(currentStartDateCell).trim().toUpperCase();
-            String currentEndDateText = formatter.formatCellValue(currentEndDateCell).trim().toUpperCase();
-
-
+        }
+        
+        for(ServiceMember sm : SMs) {
+            
             /**
-             * If SM is on orders they will count towards the total PAX count. They will also count towrds
+             * If SM is on orders they will count towards the total PAX count. They will also count towards
              * a total count for each task force/mission set
              */
-            if(currentOrders.equals("ON")) {
+            if(sm.orders.equals("ON")) {
                 totalPax++;
 
-                if(currentTaskForce.equals("TOC")) adminCMDCount++;
-                if(currentTaskForce.equals("MED OPS")) VAXDispersionSupportCount++;
-                if(currentTaskForce.equals("RAPTOR")) testingCount++;
-                if(currentTaskForce.equals("POWER")) logSupportCount++;
+                if(sm.taskForce.equals("TOC")) adminCMDCount++;
+                if(sm.taskForce.equals("MED OPS")) VAXDispersionSupportCount++;
+                if(sm.taskForce.equals("RAPTOR")) testingCount++;
+                if(sm.taskForce.equals("POWER")) logSupportCount++;
 
 
             }
@@ -137,69 +135,45 @@ public class Actions {
             /**
              * If end date has bad formatting skip this row. Will also skip SAD people
              */
-            if(currentEndDateText.indexOf('/') == -1 || currentStartDateText.indexOf('/') == -1) continue;
+            //if(sm..indexOf('/') == -1 || currentStartDateText.indexOf('/') == -1) continue;
 
-
-            /**
-             * Take current date string text and store it into integers so that a LocalDate object can be created
-             * from it.
-             */
-            int endMonth = Integer.parseInt(currentEndDateText.substring(0, currentEndDateText.indexOf('/')));
-            currentEndDateText = currentEndDateText.substring(currentEndDateText.indexOf('/') + 1);
-            int endDay = Integer.parseInt(currentEndDateText.substring(0, currentEndDateText.indexOf('/')));
-            currentEndDateText = currentEndDateText.substring(currentEndDateText.indexOf('/') + 1);
-            int endYear = Integer.parseInt(currentEndDateText);
-
-            LocalDate currentEndDate = LocalDate.of(2000 + endYear, endMonth, endDay);
-
-            /**
-             * Take current start date string text and store it into integers so that a LocalDate object can be created
-             * from it.
-             */
-            int startMonth = Integer.parseInt(currentStartDateText.substring(0, currentStartDateText.indexOf('/')));
-            currentStartDateText = currentStartDateText.substring(currentStartDateText.indexOf('/') + 1);
-            int startDay = Integer.parseInt(currentStartDateText.substring(0, currentStartDateText.indexOf('/')));
-            currentStartDateText = currentStartDateText.substring(currentStartDateText.indexOf('/') + 1);
-            int startYear = Integer.parseInt(currentStartDateText);
-
-            LocalDate currentStartDate = LocalDate.of(2000 + startYear, startMonth, startDay);
-
+            
             /**
              * Add SMs coming on today
              */
-            if(currentStartDate.equals(LocalDate.now())) {
-                SMsComingOnOrdersToday.add(currentRank + " " + currentName);
+            if(sm.startDate.equals(LocalDate.now())) {
+                SMsComingOnOrdersToday.add(sm);
             }
 
             /**
              * Add SMs names to either comingoff2weeks or comingofftomorrow based on end date mutually exclusively
              */
-            if(currentEndDate.equals(LocalDate.now()) || currentEndDate.isBefore(LocalDate.now()) && currentOrders.equals("ON")) {
-                SMsComingOffOrdersTomorrow.add(currentRank + " " + currentName);
+            if(sm.endDate.equals(LocalDate.now()) || sm.endDate.isBefore(LocalDate.now()) && sm.orders.equals("ON")) {
+                SMsComingOffOrdersTomorrow.add(sm);
             }
 
-            if(currentEndDate.minusWeeks(2).isBefore(LocalDate.now()) && currentOrders.equals("ON") && !currentEndDate.equals(LocalDate.now())) {
-                SMsComingOffOrders2Weeks.add(currentRank + " " + currentName);
+            if(sm.endDate.minusWeeks(2).isBefore(LocalDate.now()) && sm.orders.equals("ON") && !sm.endDate.equals(LocalDate.now())) {
+                SMsComingOffOrders2Weeks.add(sm);
             }
 
 
             /**
              * Add SM to appropriate category based on status
              */
-            if( currentStatus.equals("LEAVE") &
-                    currentOrders.equals("ON")) {
-                SMsOnLeave.add(currentRank + " " + currentName);
+            if( sm.status.equals("LEAVE") &
+                    sm.orders.equals("ON")) {
+                SMsOnLeave.add(sm);
             }
 
 
-            if( currentStatus.equals("QUARANTINE") &
-                    currentOrders.equals("ON")) {
-                SMsOnQuarantine.add(currentRank + " " + currentName);
+            if( sm.status.equals("QUARANTINE") &
+                    sm.orders.equals("ON")) {
+                SMsOnQuarantine.add(sm);
             }
 
-            if( currentStatus.equals("QUARTERS") &
-                    currentOrders.equals("ON")) {
-                SMsOnQuarters.add(currentRank + " " + currentName);
+            if( sm.status.equals("QUARTERS") &
+                    sm.orders.equals("ON")) {
+                SMsOnQuarters.add(sm);
             }
 
 
@@ -230,35 +204,35 @@ public class Actions {
                 "SM(s) coming on orders as of today:\n");
 
         if(SMsComingOnOrdersToday.size() <= 0) writer.write("NONE REPORTED\n");
-        else for(String s : SMsComingOnOrdersToday) writer.write(s + "\n");
+        else for(ServiceMember sm : SMsComingOnOrdersToday) writer.write(sm.rank + " " + sm.name + "\n");
 
 
 
         writer.write(   "Total: " + SMsComingOnOrdersToday.size() + "\n\n" +
                 "SM(s) coming off orders as of tomorrow:\n");
 
-        for(String s : SMsComingOffOrdersTomorrow) writer.write(s + "\n");
+        for(ServiceMember sm : SMsComingOffOrdersTomorrow) writer.write(sm.rank + " " + sm.name + "\n");
 
         writer.write(   "Total: " + SMsComingOffOrdersTomorrow.size() + "\n\n" +
                 "SM(s) coming off orders within 2 weeks\n");
 
-        for(String s : SMsComingOffOrders2Weeks) writer.write(s + "\n");
+        for(ServiceMember sm : SMsComingOffOrders2Weeks) writer.write(sm.rank + " " + sm.name + "\n");
 
         writer.write(   "Total:" + SMsComingOffOrders2Weeks.size() + "\n\n" +
                 "SM(s) on Leave:\n");
 
-        for(String s : SMsOnLeave) writer.write(s + "\n");
+        for(ServiceMember sm : SMsOnLeave) writer.write(sm.rank + " " + sm.name + "\n");
 
         writer.write(
                 "Total: " + SMsOnLeave.size() + " \n\n" +
                         "SM(s) on Quarantine:\n");
 
-        for(String s : SMsOnQuarantine) writer.write(s + "\n");
+        for(ServiceMember sm : SMsOnQuarantine) writer.write(sm.rank + " " + sm.name + "\n");
 
         writer.write(   "Total: " + SMsOnQuarantine.size() + " \n\n" +
                 "SM(s) on Quarters:\n");
 
-        for(String s : SMsOnQuarters) writer.write(s + "\n");
+        for(ServiceMember sm : SMsOnQuarters) writer.write(sm.rank + " " + sm.name + "\n");
 
         writer.write(
                 "Total: " + SMsOnQuarters.size() + " \n\n" +
@@ -288,28 +262,68 @@ public class Actions {
             currentRow = CUBSheet.createRow(startRow);
 
             nameCell = currentRow.createCell(1);
-            nameCell.setCellValue(SMsOnLeave.get(i));
+            nameCell.setCellValue(SMsOnLeave.get(i).name);
             TFCell = currentRow.createCell(5);
-            TFCell.setCellValue("POWER");
+            TFCell.setCellValue(SMsOnLeave.get(i).taskForce);
             TFCellStyle = workbook.createCellStyle();
-            TFCellStyle.setFillBackgroundColor(new XSSFColor(Color.GREEN));
+
             TFCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+            switch (SMsOnLeave.get(i).taskForce) {
+                case "TOC":
+                    TFCellStyle = (XSSFCellStyle) CellUtil.getCell(CUBSheet.getRow(1), 6).getCellStyle();
+                    break;
+                case "MED OPS":
+                    TFCellStyle = (XSSFCellStyle) CellUtil.getCell(CUBSheet.getRow(2), 6).getCellStyle();
+                    break;
+                case "RAPTOR":
+                    TFCellStyle = (XSSFCellStyle) CellUtil.getCell(CUBSheet.getRow(3), 6).getCellStyle();
+                    break;
+                case "POWER":
+                    TFCellStyle = (XSSFCellStyle) CellUtil.getCell(CUBSheet.getRow(4), 6).getCellStyle();
+                    break;
+            }
+
+            TFCell.setCellStyle(TFCellStyle);
             CUBSheet.addMergedRegion(new CellRangeAddress(currentRow.getRowNum(), currentRow.getRowNum(), 1, 1+3));
 
             i++;
             if(i + 1 >= SMsOnLeave.size()) break;
 
             nameCell = currentRow.createCell(1 + 6);
-            nameCell.setCellValue(SMsOnLeave.get(i));
+            nameCell.setCellValue(SMsOnLeave.get(i).name);
             TFCell = currentRow.createCell(5 + 6);
-            TFCell.setCellValue("POWER");
+            TFCell.setCellValue(SMsOnLeave.get(i).taskForce);
             TFCellStyle = workbook.createCellStyle();
-            TFCellStyle.setFillBackgroundColor(new XSSFColor(Color.GREEN));
+
+
             TFCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+
+            switch (SMsOnLeave.get(i).taskForce) {
+                case "TOC":
+                    TFCellStyle = (XSSFCellStyle) CellUtil.getCell(CUBSheet.getRow(1), 6).getCellStyle();
+                    break;
+                case "MED OPS":
+                    TFCellStyle = (XSSFCellStyle) CellUtil.getCell(CUBSheet.getRow(2), 6).getCellStyle();
+                    break;
+                case "RAPTOR":
+                    TFCellStyle = (XSSFCellStyle) CellUtil.getCell(CUBSheet.getRow(3), 6).getCellStyle();
+                    break;
+                case "POWER":
+                    TFCellStyle = (XSSFCellStyle) CellUtil.getCell(CUBSheet.getRow(4), 6).getCellStyle();
+                    break;
+            }
+
+
+            TFCell.setCellStyle(TFCellStyle);
+
+
+
             CUBSheet.addMergedRegion(new CellRangeAddress(currentRow.getRowNum(), currentRow.getRowNum(), 1 + 6, 1+3 + 6));
         }
 
-        OutputStream fileOut = new FileOutputStream("test" + file.getName());
+        OutputStream fileOut = new FileOutputStream("./src/PERSTATs/Output " + file.getName());
         workbook.write(fileOut);
 
 
