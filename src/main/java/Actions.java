@@ -120,7 +120,7 @@ public class Actions {
              * If SM is on orders they will count towards the total PAX count. They will also count towards
              * a total count for each task force/mission set
              */
-            if(sm.orders.equals("ON")) {
+            if(!sm.status.equals("OFF")) {
                 totalPax++;
 
                 if(sm.taskForce.equals("TOC")) adminCMDCount++;
@@ -148,11 +148,11 @@ public class Actions {
             /**
              * Add SMs names to either comingoff2weeks or comingofftomorrow based on end date mutually exclusively
              */
-            if(sm.endDate.equals(LocalDate.now()) || sm.endDate.isBefore(LocalDate.now()) && sm.orders.equals("ON")) {
+            if(sm.endDate.equals(LocalDate.now()) || sm.endDate.isBefore(LocalDate.now()) && !sm.status.equals("OFF")) {
                 SMsComingOffOrdersTomorrow.add(sm);
             }
 
-            if(sm.endDate.minusWeeks(2).isBefore(LocalDate.now()) && sm.orders.equals("ON") && !sm.endDate.equals(LocalDate.now())) {
+            if(sm.endDate.minusWeeks(2).isBefore(LocalDate.now()) && !sm.status.equals("OFF") && !sm.endDate.equals(LocalDate.now())) {
                 SMsComingOffOrders2Weeks.add(sm);
             }
 
@@ -161,18 +161,18 @@ public class Actions {
              * Add SM to appropriate category based on status
              */
             if( sm.status.equals("LEAVE") &
-                    sm.orders.equals("ON")) {
+                    !sm.status.equals("OFF")) {
                 SMsOnLeave.add(sm);
             }
 
 
             if( sm.status.equals("QUARANTINE") &
-                    sm.orders.equals("ON")) {
+                    !sm.status.equals("OFF")) {
                 SMsOnQuarantine.add(sm);
             }
 
             if( sm.status.equals("QUARTERS") &
-                    sm.orders.equals("ON")) {
+                    !sm.status.equals("OFF")) {
                 SMsOnQuarters.add(sm);
             }
 
