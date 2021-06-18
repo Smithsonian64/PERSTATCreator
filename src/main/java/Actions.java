@@ -54,12 +54,12 @@ public class Actions {
         int testingCount = 0;
         int VAXDispersionSupportCount = 0;
 
-        ArrayList<ServiceMember> SMsComingOnOrdersToday = new ArrayList<>();
-        ArrayList<ServiceMember> SMsComingOffOrdersTomorrow = new ArrayList<>();
-        ArrayList<ServiceMember> SMsComingOffOrders2Weeks = new ArrayList<>();
-        ArrayList<ServiceMember> SMsOnLeave = new ArrayList<>();
-        ArrayList<ServiceMember> SMsOnQuarantine = new ArrayList<>();
-        ArrayList<ServiceMember> SMsOnQuarters = new ArrayList<>();
+        ArrayList<ServiceMember> SMsComingOnOrdersToday = new ArrayList<ServiceMember>();
+        ArrayList<ServiceMember> SMsComingOffOrdersTomorrow = new ArrayList<ServiceMember>();
+        ArrayList<ServiceMember> SMsComingOffOrders2Weeks = new ArrayList<ServiceMember>();
+        ArrayList<ServiceMember> SMsOnLeave = new ArrayList<ServiceMember>();
+        ArrayList<ServiceMember> SMsOnQuarantine = new ArrayList<ServiceMember>();
+        ArrayList<ServiceMember> SMsOnQuarters = new ArrayList<ServiceMember>();
 
         ArrayList<ServiceMember> SMs = new ArrayList<>();
 
