@@ -257,6 +257,9 @@ public class Actions {
         Cell nameCell;
         Cell TFCell;
         XSSFCellStyle TFCellStyle;
+
+        System.out.println("Inputting Leave");
+
         for (int i = 0; i < SMsOnLeave.size(); i++) {
             CUBSheet.shiftRows(startRow, CUBSheet.getLastRowNum(), 1, true, true);
             currentRow = CUBSheet.createRow(startRow);
