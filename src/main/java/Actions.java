@@ -61,7 +61,7 @@ public class Actions {
         ArrayList<ServiceMember> SMsOnQuarantine = new ArrayList<ServiceMember>();
         ArrayList<ServiceMember> SMsOnQuarters = new ArrayList<ServiceMember>();
 
-        ArrayList<ServiceMember> SMs = new ArrayList<>();
+        ArrayList<ServiceMember> SMs = new ArrayList<ServiceMember>();
 
 
         /**
