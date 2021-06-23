@@ -236,13 +236,11 @@ public class Actions {
 
         writer.write(
                 "Total: " + SMsOnQuarters.size() + " \n\n" +
-                        "Michael W Smith\n" +
-                        "2LT, IN\n" +
-                        "1-200th IN D CO PLT LDR\n" +
-                        "(575)499-9245\n" +
-                        "p173939@nmsu.edu\n" +
-                        "Smithsonian64@yahoo.com\n" +
-                        "michael.w.smith910.mil@mail.mil"
+                        "PFC Aguino, Raquel\n" +
+                        "1115th Transportation Company\n" +
+                        "JTF S-1\n" +
+                        "Raquel.a.aguino.mil@mail.mil\n" +
+                        "\"Don't count the days. Make the days count.\"\n"
         );
 
         writer.close();
