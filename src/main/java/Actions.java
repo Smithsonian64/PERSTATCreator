@@ -82,6 +82,9 @@ public class Actions {
         int endDateColumnIndex = 11;
         int taskForceColumnIndex = 13;
         int MOSColumnIndex = 6;
+
+        int extendingCellColumn = 10;
+        int notExtendingCellColumn = 12;
         
 
 
@@ -155,8 +158,7 @@ public class Actions {
             }
 
             if(sm.endDate.minusWeeks(2).isBefore(LocalDate.now()) && !sm.status.equals("OFF") && !sm.endDate.equals(LocalDate.now())) {
-
-                if(sm.endDateCellReference.getCellStyle().getFillForegroundColor() == 0) {
+                if(sm.endDateCellReference.getCellStyle().getFillForegroundColor() == CellUtil.getCell(perstatSheet.getRow(0), notExtendingCellColumn).getCellStyle().getFillForegroundColor()) {
                     SMsComingOffOrders2Weeks.add(sm);
                 }
             }
