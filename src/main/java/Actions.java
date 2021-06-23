@@ -109,7 +109,9 @@ public class Actions {
                     LocalDate.parse(formatter.formatCellValue(CellUtil.getCell(row, startDateColumnIndex)).trim().toUpperCase()),
                     LocalDate.parse(formatter.formatCellValue(CellUtil.getCell(row, endDateColumnIndex)).trim().toUpperCase()),
                     formatter.formatCellValue(CellUtil.getCell(row, taskForceColumnIndex)).trim().toUpperCase(),
-                    formatter.formatCellValue(CellUtil.getCell(row, statusColumnIndex)).trim().toUpperCase()
+                    formatter.formatCellValue(CellUtil.getCell(row, statusColumnIndex)).trim().toUpperCase(),
+                    CellUtil.getCell(row, endDateColumnIndex)
+
             ));
 
         }
@@ -153,7 +155,10 @@ public class Actions {
             }
 
             if(sm.endDate.minusWeeks(2).isBefore(LocalDate.now()) && !sm.status.equals("OFF") && !sm.endDate.equals(LocalDate.now())) {
-                SMsComingOffOrders2Weeks.add(sm);
+
+                if(sm.endDateCellReference.getCellStyle().getFillForegroundColor() == 0) {
+                    SMsComingOffOrders2Weeks.add(sm);
+                }
             }
 
 

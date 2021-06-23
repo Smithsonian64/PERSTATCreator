@@ -1,5 +1,7 @@
 
 
+import org.apache.poi.ss.usermodel.Cell;
+
 import java.time.LocalDate;
 
 public class ServiceMember {
@@ -12,8 +14,9 @@ public class ServiceMember {
     LocalDate endDate;
     String taskForce;
     String status;
+    Cell endDateCellReference;
 
-    ServiceMember(String name, String rank, String MOS, String orders, LocalDate startDate, LocalDate endDate, String taskForce, String status) {
+    ServiceMember(String name, String rank, String MOS, String orders, LocalDate startDate, LocalDate endDate, String taskForce, String status, Cell dateCellReference) {
 
         this.name = name;
         this.rank = rank;
@@ -23,6 +26,7 @@ public class ServiceMember {
         this.endDate = endDate;
         this.taskForce = taskForce;
         this.status = status;
+        this.endDateCellReference = dateCellReference;
 
     }
 
