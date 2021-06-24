@@ -1,8 +1,3 @@
-/**
- * @author Michael Smith
- * 6/10/2021
- */
-
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellUtil;
@@ -13,12 +8,19 @@ import java.io.FileInputStream;
 import java.io.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
+/**
+ * @author Michael Smith
+ * 6/10/2021
+ */
+@SuppressWarnings("SpellCheckingInspection")
 public class Actions {
 
-    static String filename = "./src/PERSTATs/JTF PERSTAT " + LocalDate.now().getDayOfMonth() + " " + LocalDate.now().getMonth() + " " + (LocalDate.now().getYear() - 2000) + ".xlsx";
+    static String filename = "./src/PERSTATs/JTF PERSTAT " +
+                            LocalDate.now().getDayOfMonth() + " " +
+                            LocalDate.now().getMonth() + " " +
+                            (LocalDate.now().getYear() - 2000) + ".xlsx";
     static File file;
     static FileInputStream fip;
     static XSSFWorkbook workbook;
@@ -33,7 +35,7 @@ public class Actions {
     static ArrayList<ServiceMember> SMsOnQuarantine;
     static ArrayList<ServiceMember> SMsOnQuarters;
 
-    static ArrayList<ServiceMember> SMs = new ArrayList<ServiceMember>();
+    static ArrayList<ServiceMember> SMs = new ArrayList<>();
 
     public static void main(String[] args) throws IOException {
 
@@ -55,12 +57,7 @@ public class Actions {
 
 
 
-        if (file.isFile() && file.exists()) {
-
-        }
-        else {
-            System.out.println("file doesnt exist or cannot open");
-        }
+        if (!file.isFile() || !file.exists()) System.out.println("file doesnt exist or cannot open");
 
         CUBSheet = workbook.getSheetAt(0);
         personnelSheet = workbook.getSheetAt(1);
@@ -70,45 +67,28 @@ public class Actions {
     }
 
     static void generateEmail() throws IOException {
-        File output = new File("output.txt");
 
 
-
-        /**
-         * Create output file
-         */
-
-
-
-        /**
-         * Create information related variables
-         */
         int totalPax = 0;
         int adminCMDCount = 0;
         int logSupportCount = 0;
         int testingCount = 0;
         int VAXDispersionSupportCount = 0;
 
-        SMsComingOnOrdersToday = new ArrayList<ServiceMember>();
-        SMsComingOffOrdersTomorrow = new ArrayList<ServiceMember>();
-        SMsComingOffOrders2Weeks = new ArrayList<ServiceMember>();
-        SMsOnLeave = new ArrayList<ServiceMember>();
-        SMsOnQuarantine = new ArrayList<ServiceMember>();
-        SMsOnQuarters = new ArrayList<ServiceMember>();
+        SMsComingOnOrdersToday = new ArrayList<>();
+        SMsComingOffOrdersTomorrow = new ArrayList<>();
+        SMsComingOffOrders2Weeks = new ArrayList<>();
+        SMsOnLeave = new ArrayList<>();
+        SMsOnQuarantine = new ArrayList<>();
+        SMsOnQuarters = new ArrayList<>();
 
-        SMs = new ArrayList<ServiceMember>();
+        SMs = new ArrayList<>();
 
 
-        /**
-         * Create workbook related variable references
-         */
         DataFormatter formatter = new DataFormatter();
         Sheet perstatSheet = workbook.getSheetAt(1);
 
 
-        /**
-         * Create cell reference specific variables
-         */
         int nameColumnIndex = 2;
         int statusColumnIndex = 15;
         int ordersColumnIndex = 7;
@@ -118,26 +98,14 @@ public class Actions {
         int taskForceColumnIndex = 13;
         int MOSColumnIndex = 6;
 
-        int extendingCellColumn = 10;
         int notExtendingCellColumn = 12;
 
 
-
-        /**
-         * loop through every row
-         */
         for(Row row : perstatSheet) {
 
-            /**
-             * Skip header rows in workbook
-             */
             if (row.getRowNum() < 3) continue;
             if (formatter.formatCellValue((CellUtil.getCell(row, startDateColumnIndex))).trim().toUpperCase().indexOf('-') == -1) continue;
             if (formatter.formatCellValue((CellUtil.getCell(row, endDateColumnIndex))).trim().toUpperCase().indexOf('-') == -1) continue;
-
-            /**
-             * Create Cell references and raw string formats of cell contents for each row
-             */
 
             SMs.add(new ServiceMember(
                     formatter.formatCellValue(CellUtil.getCell(row, nameColumnIndex)).trim().toUpperCase(),
@@ -156,10 +124,6 @@ public class Actions {
 
         for(ServiceMember sm : SMs) {
 
-            /**
-             * If SM is on orders they will count towards the total PAX count. They will also count towards
-             * a total count for each task force/mission set
-             */
             if(!sm.status.equals("OFF")) {
                 totalPax++;
 
@@ -171,23 +135,10 @@ public class Actions {
 
             }
 
-            //TODO
-            /**
-             * If end date has bad formatting skip this row. Will also skip SAD people
-             */
-            //if(sm..indexOf('/') == -1 || currentStartDateText.indexOf('/') == -1) continue;
-
-
-            /**
-             * Add SMs coming on today
-             */
             if(sm.startDate.equals(LocalDate.now())) {
                 SMsComingOnOrdersToday.add(sm);
             }
 
-            /**
-             * Add SMs names to either comingoff2weeks or comingofftomorrow based on end date mutually exclusively
-             */
             if(sm.endDate.equals(LocalDate.now()) || sm.endDate.isBefore(LocalDate.now()) && !sm.status.equals("OFF")) {
                 SMsComingOffOrdersTomorrow.add(sm);
             }
@@ -199,9 +150,6 @@ public class Actions {
             }
 
 
-            /**
-             * Add SM to appropriate category based on status
-             */
             if( sm.status.equals("LEAVE") &
                     !sm.status.equals("OFF")) {
                 SMsOnLeave.add(sm);
@@ -222,15 +170,8 @@ public class Actions {
         }
 
 
-        /**
-         * reference to current date
-         */
         LocalDate currentDate = LocalDate.now();
 
-        /**
-         * Write to output file in the specific format for the email utilizing appropraite arraylists and variables
-         * to fill in information
-         */
         System.out.print("Generating Email...");
         FileWriter writer = new FileWriter(outputFileName);
         writer.write(   "ALCON,\n\n" +
@@ -298,14 +239,6 @@ public class Actions {
         int startRow = 16;
 
         Row currentRow;
-        Cell nameCell;
-        Cell TFCell;
-        XSSFCellStyle TFCellStyle;
-
-        int currentRowNumber;
-
-        currentRow = CUBSheet.getRow(startRow);
-        //while(!formatter.formatCellValue(CellUtil.getCell(currentRow, 1)).trim().toUpperCase().equals("QUARANTINE/QUARTERS")) {
 
         System.out.print("Deleting old leave...");
 
@@ -431,7 +364,6 @@ public class Actions {
 
     static void inputDTG() {
         System.out.print("Inputting Date Time Group...");
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
         Row currentRow = personnelSheet.getRow(1);
         CellStyle DTGCellStyle = CellUtil.getCell(personnelSheet.getRow(0), 0).getCellStyle();
