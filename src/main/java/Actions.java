@@ -7,31 +7,46 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellUtil;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
-import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
-import java.awt.Color;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Currency;
 
 public class Actions {
 
+    static String filename = "./src/PERSTATs/JTF PERSTAT " + LocalDate.now().getDayOfMonth() + " " + LocalDate.now().getMonth() + " " + (LocalDate.now().getYear() - 2000) + ".xlsx";
+    static File file;
+    static FileInputStream fip;
+    static XSSFWorkbook workbook;
+    static String outputFileName = "output.txt";
+    static Sheet CUBSheet;
+
+    static ArrayList<ServiceMember> SMsComingOnOrdersToday;
+    static ArrayList<ServiceMember> SMsComingOffOrdersTomorrow;
+    static ArrayList<ServiceMember> SMsComingOffOrders2Weeks;
+    static ArrayList<ServiceMember> SMsOnLeave;
+    static ArrayList<ServiceMember> SMsOnQuarantine;
+    static ArrayList<ServiceMember> SMsOnQuarters;
+
+    static ArrayList<ServiceMember> SMs = new ArrayList<ServiceMember>();
+
     public static void main(String[] args) throws IOException {
 
+        fetchFile();
+        generateEmail();
+        deleteOldLeave();
+        inputLeave();
+        outputFile();
 
-        /**
-         * Get file from working directory and store it in a reference
-         */
+    }
 
-        String filename = "./src/PERSTATs/JTF PERSTAT " + LocalDate.now().getDayOfMonth() + " " + LocalDate.now().getMonth() + " " + (LocalDate.now().getYear() - 2000) + ".xlsx";
-        File file = new File(filename);
-        FileInputStream fip = new FileInputStream(file);
-        XSSFWorkbook workbook = new XSSFWorkbook(fip);
+    static void fetchFile() throws IOException {
+        file = new File(filename);
+        fip = new FileInputStream(file);
+        workbook = new XSSFWorkbook(fip);
+
         if (file.isFile() && file.exists()) {
             System.out.println("\"Found " + file.getName() + "\"");
         }
@@ -39,11 +54,19 @@ public class Actions {
             System.out.println("file doesnt exist or cannot open");
         }
 
+        CUBSheet = workbook.getSheetAt(0);
+
+    }
+
+    static void generateEmail() throws IOException {
+        File output = new File("output.txt");
+
+
 
         /**
          * Create output file
          */
-        File output = new File("output.txt");
+
 
 
         /**
@@ -55,14 +78,14 @@ public class Actions {
         int testingCount = 0;
         int VAXDispersionSupportCount = 0;
 
-        ArrayList<ServiceMember> SMsComingOnOrdersToday = new ArrayList<ServiceMember>();
-        ArrayList<ServiceMember> SMsComingOffOrdersTomorrow = new ArrayList<ServiceMember>();
-        ArrayList<ServiceMember> SMsComingOffOrders2Weeks = new ArrayList<ServiceMember>();
-        ArrayList<ServiceMember> SMsOnLeave = new ArrayList<ServiceMember>();
-        ArrayList<ServiceMember> SMsOnQuarantine = new ArrayList<ServiceMember>();
-        ArrayList<ServiceMember> SMsOnQuarters = new ArrayList<ServiceMember>();
+        SMsComingOnOrdersToday = new ArrayList<ServiceMember>();
+        SMsComingOffOrdersTomorrow = new ArrayList<ServiceMember>();
+        SMsComingOffOrders2Weeks = new ArrayList<ServiceMember>();
+        SMsOnLeave = new ArrayList<ServiceMember>();
+        SMsOnQuarantine = new ArrayList<ServiceMember>();
+        SMsOnQuarters = new ArrayList<ServiceMember>();
 
-        ArrayList<ServiceMember> SMs = new ArrayList<ServiceMember>();
+        SMs = new ArrayList<ServiceMember>();
 
 
         /**
@@ -86,7 +109,7 @@ public class Actions {
 
         int extendingCellColumn = 10;
         int notExtendingCellColumn = 12;
-        
+
 
 
         /**
@@ -119,9 +142,9 @@ public class Actions {
             ));
 
         }
-        
+
         for(ServiceMember sm : SMs) {
-            
+
             /**
              * If SM is on orders they will count towards the total PAX count. They will also count towards
              * a total count for each task force/mission set
@@ -143,7 +166,7 @@ public class Actions {
              */
             //if(sm..indexOf('/') == -1 || currentStartDateText.indexOf('/') == -1) continue;
 
-            
+
             /**
              * Add SMs coming on today
              */
@@ -198,7 +221,7 @@ public class Actions {
          * to fill in information
          */
         System.out.print("Generating Email...");
-        FileWriter writer = new FileWriter(output.getName());
+        FileWriter writer = new FileWriter(outputFileName);
         writer.write(   "ALCON,\n\n" +
                 "Please see attachment for the JTF PERSTAT for " + currentDate.getDayOfMonth() + " " + currentDate.getMonth() + " " + currentDate.getYear() + "\n" +
                 "Roll-up is as follows:\n\n" +
@@ -253,9 +276,13 @@ public class Actions {
         );
 
         writer.close();
-        System.out.println("Done!");
+        System.out.println("\t\tDone!");
+    }
 
-        Sheet CUBSheet = workbook.getSheetAt(0);
+    static void deleteOldLeave() {
+        DataFormatter formatter = new DataFormatter();
+
+        //Sheet CUBSheet = workbook.getSheetAt(0);
 
         int startRow = 16;
 
@@ -264,20 +291,64 @@ public class Actions {
         Cell TFCell;
         XSSFCellStyle TFCellStyle;
 
-        currentRow = CUBSheet.getRow(startRow);
-        /*//while(!formatter.formatCellValue(CellUtil.getCell(currentRow, 1)).trim().toUpperCase().equals("QUARANTINE/QUARTERS")) {
+        int currentRowNumber;
 
-        for(int i = 0; i <  20; i++) {
+        currentRow = CUBSheet.getRow(startRow);
+        //while(!formatter.formatCellValue(CellUtil.getCell(currentRow, 1)).trim().toUpperCase().equals("QUARANTINE/QUARTERS")) {
+
+        System.out.print("Deleting old leave...");
+
+        while(!formatter.formatCellValue(CellUtil.getCell(CUBSheet.getRow(startRow + 1), 1)).trim().toUpperCase().equals("QUARANTINE")) {
+
+            currentRow = CUBSheet.getRow(startRow);
+
+            for (int j = 0; j < CUBSheet.getNumMergedRegions(); j++) {
+                if (CUBSheet.getMergedRegion(j).isInRange(startRow, 1)) {
+                    CUBSheet.removeMergedRegion(j);
+                    continue;
+                }
+                if (CUBSheet.getMergedRegion(j).isInRange(startRow, 7))
+                    CUBSheet.removeMergedRegion(j);
+
+            }
+
             CUBSheet.removeRow(currentRow);
             CUBSheet.shiftRows(startRow + 1, CUBSheet.getLastRowNum(), -1);
+
         }
-*/
+
+        for (int j = 0; j < CUBSheet.getNumMergedRegions(); j++) {
+            if (CUBSheet.getMergedRegion(j).isInRange(startRow, 1)) {
+                CUBSheet.removeMergedRegion(j);
+
+            }
 
 
+        }
 
+        for (int j = 0; j < CUBSheet.getNumMergedRegions(); j++) {
+
+            if (CUBSheet.getMergedRegion(j).isInRange(startRow, 7))
+                CUBSheet.removeMergedRegion(j);
+
+        }
+
+        System.out.println("\tDone!");
+    }
+
+    static void inputLeave() {
         System.out.print("Inputting Leave...");
 
+        Row currentRow;
+        Cell nameCell;
+        Cell TFCell;
+        XSSFCellStyle TFCellStyle;
+
+        int startRow = 16;
+
         for (int i = 0; i < SMsOnLeave.size(); i++) {
+
+
             CUBSheet.shiftRows(startRow, CUBSheet.getLastRowNum(), 1, true, true);
             currentRow = CUBSheet.createRow(startRow);
 
@@ -338,21 +409,17 @@ public class Actions {
 
             TFCell.setCellStyle(TFCellStyle);
 
-
-
             CUBSheet.addMergedRegion(new CellRangeAddress(currentRow.getRowNum(), currentRow.getRowNum(), 1 + 6, 1+3 + 6));
         }
 
-        System.out.println("Done!");
+        System.out.println("\t\tDone!");
+    }
 
+    static void outputFile() throws IOException {
         OutputStream fileOut = new FileOutputStream("./src/PERSTATs/" + file.getName());
         workbook.write(fileOut);
 
         System.out.println("\nDone with process check file.");
-
-
-
-
     }
 
 }
