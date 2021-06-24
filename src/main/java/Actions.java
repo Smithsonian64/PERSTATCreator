@@ -12,6 +12,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 public class Actions {
@@ -22,6 +24,7 @@ public class Actions {
     static XSSFWorkbook workbook;
     static String outputFileName = "output.txt";
     static Sheet CUBSheet;
+    static Sheet personnelSheet;
 
     static ArrayList<ServiceMember> SMsComingOnOrdersToday;
     static ArrayList<ServiceMember> SMsComingOffOrdersTomorrow;
@@ -38,23 +41,31 @@ public class Actions {
         generateEmail();
         deleteOldLeave();
         inputLeave();
+        inputDTG();
         outputFile();
 
     }
 
     static void fetchFile() throws IOException {
+        System.out.print("Fetching file data...");
+
         file = new File(filename);
         fip = new FileInputStream(file);
         workbook = new XSSFWorkbook(fip);
 
+
+
         if (file.isFile() && file.exists()) {
-            System.out.println("\"Found " + file.getName() + "\"");
+
         }
         else {
             System.out.println("file doesnt exist or cannot open");
         }
 
         CUBSheet = workbook.getSheetAt(0);
+        personnelSheet = workbook.getSheetAt(1);
+
+        System.out.println("\t\tDone!");
 
     }
 
@@ -276,7 +287,7 @@ public class Actions {
         );
 
         writer.close();
-        System.out.println("\t\tDone!");
+        System.out.println("\t\t\tDone!");
     }
 
     static void deleteOldLeave() {
@@ -305,8 +316,11 @@ public class Actions {
             for (int j = 0; j < CUBSheet.getNumMergedRegions(); j++) {
                 if (CUBSheet.getMergedRegion(j).isInRange(startRow, 1)) {
                     CUBSheet.removeMergedRegion(j);
-                    continue;
                 }
+
+            }
+
+            for (int j = 0; j < CUBSheet.getNumMergedRegions(); j++) {
                 if (CUBSheet.getMergedRegion(j).isInRange(startRow, 7))
                     CUBSheet.removeMergedRegion(j);
 
@@ -333,7 +347,7 @@ public class Actions {
 
         }
 
-        System.out.println("\tDone!");
+        System.out.println("\t\tDone!");
     }
 
     static void inputLeave() {
@@ -412,7 +426,19 @@ public class Actions {
             CUBSheet.addMergedRegion(new CellRangeAddress(currentRow.getRowNum(), currentRow.getRowNum(), 1 + 6, 1+3 + 6));
         }
 
-        System.out.println("\t\tDone!");
+        System.out.println("\t\t\tDone!");
+    }
+
+    static void inputDTG() {
+        System.out.print("Inputting Date Time Group...");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        LocalDateTime now = LocalDateTime.now();
+        Row currentRow = personnelSheet.getRow(1);
+        CellStyle DTGCellStyle = CellUtil.getCell(personnelSheet.getRow(0), 0).getCellStyle();
+        Cell DTGCell = CellUtil.getCell(currentRow, 0);
+        DTGCell.setCellValue("Updated: " + now.toString());
+        DTGCell.setCellStyle(DTGCellStyle);
+        System.out.println("Done!");
     }
 
     static void outputFile() throws IOException {
